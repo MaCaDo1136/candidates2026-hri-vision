@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'camera_node = vision_pipeline.camera_node:main',
         ],
     },
 )
