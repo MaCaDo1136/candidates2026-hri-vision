@@ -3,13 +3,14 @@
 <package format="3">
   <name>vision_pipeline</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="mario@todo.todo">mario</maintainer>
+  <description>A ROS 2 package for processing vision data for face recognition</description>
+  <maintainer email="contact@mariocasas.dev">Mario Casas</maintainer>
   <license>TODO: License declaration</license>
 
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
+  <depend>vision_msgs</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
