@@ -2,15 +2,18 @@
 
 """
 Description:
-	<Qué hace este nodo, en 1-3 líneas>
+	Face detector node for the vision pipeline. 
+    This node is responsible for detecting faces in images 
+    received from the camera and publishing the detection results to a specific topic.
 
 ------------------------------
 Publishing topics:
-	<Descripción del topic>
-	<topic_name> - <msg_type>
+    Detected faces are published to the following topic:
+	/faces/detections - Detection2DArray
 
 ------------------------------
 Subscription Topics:
+    This node gets images from the following topic:
 	/camera/image_raw - Image
 
 ------------------------------
@@ -35,14 +38,13 @@ model_path = os.path.join(get_package_share_directory(
 
 
 class FaceDetector(Node):
-    """<Qué representa este nodo publisher>.
-
-    Args:
-            Node: Clase base de rclpy para nodos ROS2.
-    """
+    """This node detects faces in images received from the camera."""
 
     def __init__(self):
-        """Inicializa el nodo, el publisher y el timer."""
+        """Initializes the face detector node, 
+        sets up the publisher and subscriber, and loads the YOLO model.
+        """
+
         super().__init__('face_detector_node')
         self.get_logger().info('Face detector node has been started.')
         self.publisher = self.create_publisher(
@@ -57,7 +59,7 @@ class FaceDetector(Node):
     def image_callback(self, msg):
         """Callback function for the image subscription.
         Args:
-                msg (Image): Mensaje de imagen recibido del topic /camera/image_raw.
+                msg (Image): Message containing the image data from the camera.
         """
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         results = self.model(cv_image)
