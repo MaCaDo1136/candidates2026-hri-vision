@@ -31,6 +31,8 @@ setup(
         'console_scripts': [
             'camera_node = vision_pipeline.camera_node:main',
             'face_detector_node = vision_pipeline.face_detector_node:main',
+            'tracker_node = vision_pipeline.tracker_node:main',
+            'visualizer_node = vision_pipeline.visualizer_node:main',
         ],
     },
 )
