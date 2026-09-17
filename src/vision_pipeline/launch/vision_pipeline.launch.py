@@ -28,4 +28,10 @@ def generate_launch_description():
             name='visualizer_node',
             output='screen'
         ),
+        Node(
+            package='vision_pipeline',
+            executable='face_id_node',
+            name='face_id_node',
+            output='screen'
+        ),
     ])

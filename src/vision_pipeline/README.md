@@ -1,11 +1,10 @@
-# vision_pipeline
+## Enrolamiento de identidad (face_id_node)
 
-## Modelo de detección facial
-
-Los pesos de YOLOv8n-face no están incluidos en el repositorio (ver `.gitignore`). Descárgalos antes de correr `face_detector_node`:
+Este repositorio no incluye `mario_embedding.npy` ni `mi_foto.jpg` por privacidad. Antes de correr `face_id_node`, genera tu propio embedding:
 
 \`\`\`bash
-mkdir -p src/vision_pipeline/vision_pipeline/models
-cd src/vision_pipeline/vision_pipeline/models
-wget https://github.com/lindevs/yolov8-face/releases/latest/download/yolov8n-face-lindevs.pt
+cd src/vision_pipeline/vision_pipeline
+python3 embedding_generator.py
 \`\`\`
+
+El script toma una foto desde la cámara y guarda el embedding correspondiente en `mario_embedding.npy`, que `face_id_node` carga al arrancar.
