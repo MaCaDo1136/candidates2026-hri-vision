@@ -7,6 +7,9 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(std_msgs REQUIRED)
+
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -23,4 +26,11 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/AudioSegment.msg"
+  DEPENDENCIES std_msgs
+)
+
 ament_package()
+
+find_package(std_msgs REQUIRED)
