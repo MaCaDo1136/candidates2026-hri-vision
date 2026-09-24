@@ -21,7 +21,6 @@ Date: September 17, 2026
 
 import torch
 import numpy as np
-
 import rclpy
 import sounddevice as sd
 
@@ -34,8 +33,10 @@ class VADNode(Node):
     """Detects speech segments from the microphone using Silero VAD.
 
     Args:
-            Node: Clase base de rclpy para nodos ROS2.
+        Node: Clase base de rclpy para nodos ROS2.
     """
+
+    MIN_SPEECH_BLOCKS = 16
 
     def __init__(self):
         """Initializes the VADNode."""
@@ -64,24 +65,31 @@ class VADNode(Node):
         if status:
             self.get_logger().warn(f'Audio input status: {status}')
 
-        indata = torch.from_numpy(indata).float().squeeze()
+        GAIN = 2.5
+        indata = torch.from_numpy(indata).float().squeeze() * GAIN
+        indata = torch.clamp(indata, -1.0, 1.0)
+
         speech_prob = self.vad_model(indata, self.sample_rate)
 
-        if (speech_prob > 0.5):
+        if (speech_prob > 0.65):
             self.buffer.append(indata.numpy())
             self.silence_counter = 0
         else:
             if self.buffer:
                 self.silence_counter += 1
                 if self.silence_counter >= 16:
-                    audio_segment_msg = AudioSegment()
-                    full_audio = np.concatenate(self.buffer)
-                    audio_segment_msg.samples = full_audio.tolist()
-                    audio_segment_msg.sample_rate = self.sample_rate
-                    audio_segment_msg.header.stamp = self.get_clock().now().to_msg()
-                    self.publisher.publish(audio_segment_msg)
-                    self.get_logger().info(
-                        f'Published audio segment of length {len(self.buffer)} blocks.')
+                    if len(self.buffer) >= self.MIN_SPEECH_BLOCKS:
+                        audio_segment_msg = AudioSegment()
+                        full_audio = np.concatenate(self.buffer)
+                        self.get_logger().info(
+                            f'Amplitud promedio del segmento: {np.abs(full_audio).mean():.4f}')
+
+                        audio_segment_msg.samples = full_audio.tolist()
+                        audio_segment_msg.sample_rate = self.sample_rate
+                        audio_segment_msg.header.stamp = self.get_clock().now().to_msg()
+                        self.publisher.publish(audio_segment_msg)
+                        self.get_logger().info(
+                            f'Published audio segment of length {len(self.buffer)} blocks.')
                     self.buffer.clear()
                     self.silence_counter = 0
 

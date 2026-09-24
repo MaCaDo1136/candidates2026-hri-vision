@@ -28,6 +28,7 @@ endif()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/AudioSegment.msg"
+  "msg/Transcript.msg"
   DEPENDENCIES std_msgs
 )
 

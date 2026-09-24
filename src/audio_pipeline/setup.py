@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'vad_node = audio_pipeline.vad_node:main',
+            'transcribe_node = audio_pipeline.transcribe_node:main',
         ],
     },
 )
