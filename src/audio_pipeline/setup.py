@@ -1,3 +1,5 @@
+import os
+from glob import glob
 from setuptools import find_packages, setup
 
 package_name = 'audio_pipeline'
@@ -10,6 +12,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (os.path.join('share', package_name), glob('audio_pipeline/*.npy')),
+        (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -26,6 +30,7 @@ setup(
         'console_scripts': [
             'vad_node = audio_pipeline.vad_node:main',
             'transcribe_node = audio_pipeline.transcribe_node:main',
+            'voice_id_node = audio_pipeline.voice_id_node:main',
         ],
     },
 )
