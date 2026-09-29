@@ -18,6 +18,7 @@ import os
 
 import chromadb
 import rclpy
+import ollama
 
 from rclpy.node import Node
 from sentence_transformers import SentenceTransformer
@@ -66,8 +67,24 @@ class RagServiceNode(Node):
             response.found = False
             response.answer = 'No encontré información sobre eso.'
         else:
-            response.found = True
-            response.answer = ' '.join(relevant_chunks)
+            context = '\n'.join(relevant_chunks)
+            prompt = (
+                f'Contexto sobre esta persona:\n{context}\n\n'
+                f'Pregunta: {request.question}\n\n'
+                'Responde SOLO con información del contexto. '
+                'Si el contexto no contiene la respuesta, di que no lo sabes.'
+            )
+            try:
+                result = ollama.chat(
+                    model='qwen2.5:1.5b',
+                    messages=[{'role': 'user', 'content': prompt}]
+                )
+                response.answer = result['message']['content']
+                response.found = True
+            except Exception as e:
+                self.get_logger().warn(f'Ollama falló: {e}')
+                response.answer = ' '.join(relevant_chunks)
+                response.found = True
 
         return response
 
