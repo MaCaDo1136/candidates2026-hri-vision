@@ -11,7 +11,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'chromadb', 'sentence-transformers'],
     zip_safe=True,
     maintainer='mario',
     maintainer_email='A01287116@tec.mx',
@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'rag_service_node = rag_service.rag_service_node:main',
         ],
     },
 )

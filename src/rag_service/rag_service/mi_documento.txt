@@ -1,0 +1,10 @@
+Mario Casas Donjuan estudia Ingenieria en Robotica y Sistemas Digitales en el Tecnologico de Monterrey.
+Se gradua en Junio de 2029.
+Su proyecto para candidates 2026 de roborregos es un sistema de HRI/Vision en ROS 2.
+Tiene un Homelab dodne corre en proxmox servicios como vpn, monitoreo de su red y una nas.
+Tiene su propia pagina web donde tiene sus proyectos y un resumen de su carrera y experiencia.
+Le gusta mucho la robotica y la integracion de software en sistemas embebidos.
+Tiene dos mascotas, dos perras llamadas "Daisy" y "Becca".
+Su color favorito es el azul.
+Su equipo de futbol favorito son los Rayados de Monterrey.
+Le gustan mucho los cubos rubik y rompecabezas de ese tipo.
