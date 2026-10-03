@@ -33,7 +33,7 @@ class RagServiceNode(Node):
         super().__init__('rag_service_node')
 
         # max distance for the retrieved chunks to be considered relevant
-        self.declare_parameter('max_distance', 0.19)
+        self.declare_parameter('max_distance', 0.22)
 
         self.model = SentenceTransformer('intfloat/multilingual-e5-small')
         client = chromadb.PersistentClient(
@@ -47,6 +47,8 @@ class RagServiceNode(Node):
     def query_callback(self, request, response):
         """Handles a RagQuery request."""
         max_distance = self.get_parameter('max_distance').value
+        person_id = request.person_id.lower()
+        self.get_logger().info(person_id)
 
         query_embedding = self.model.encode(
             'query: ' + request.question, normalize_embeddings=True).tolist()
@@ -54,11 +56,12 @@ class RagServiceNode(Node):
         results = self.col.query(
             query_embeddings=[query_embedding],
             n_results=3,
-            where={'person_id': request.person_id}
+            where={'person_id': person_id}
         )
 
         documents = results['documents'][0]
         distances = results['distances'][0]
+        self.get_logger().info(f'Distancias: {distances}')
         relevant_chunks = [
             doc for doc, dist in zip(documents, distances) if dist <= max_distance
         ]

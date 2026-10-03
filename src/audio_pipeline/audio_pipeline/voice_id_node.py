@@ -67,7 +67,7 @@ class VoiceIdNode(Node):
 
         identity_msg = VoiceIdentity()
         identity_msg.header = msg.header
-        identity_msg.speaker = 'Mario' if similarity > 0.70 else 'Unknown'
+        identity_msg.speaker = 'Mario' if similarity > 0.60 else 'Unknown'
         identity_msg.score = float(similarity)
         self.publisher.publish(identity_msg)
         self.get_logger().info(

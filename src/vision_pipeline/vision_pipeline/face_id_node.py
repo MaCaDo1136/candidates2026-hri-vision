@@ -74,7 +74,7 @@ class FaceIdNode(Node):
     def tracked_callback(self, msg):
         """Identifies tracked faces by comparing their embeddings against the known embedding."""
         self.frame_counter += 1
-        if self.frame_counter % 5 != 0:  # Process every 5th frame to reduce computation
+        if self.frame_counter % 10 != 0:  # Process every 10th frame to reduce computation
             return
 
         if self.latest_frame is None:
