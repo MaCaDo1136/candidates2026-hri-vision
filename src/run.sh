@@ -107,12 +107,8 @@ ensure_ollama
 mkdir -p "$PEOPLE_DIR"
 echo
 
-# Primera vez (sin install): hay que compilar antes de usar el menú de personas
-if [ ! -f "$WS/install/setup.bash" ]; then
-  build_all
-else
-  source "$WS/install/setup.bash"
-fi
+# Compilar siempre antes del menu (incremental) para que el codigo nuevo este instalado
+build_all
 
 # 1) Demo desde cero (opcional)
 read -p "¿Empezar desde cero? Respalda y vacía personas y base RAG [s/N]: " a
