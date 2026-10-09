@@ -38,6 +38,7 @@ setup(
             'tracker_node = vision_pipeline.tracker_node:main',
             'visualizer_node = vision_pipeline.visualizer_node:main',
             'face_id_node = vision_pipeline.face_id_node:main',
+            'mouth_movement_node = vision_pipeline.mouth_movement_node:main',
         ],
     },
 )

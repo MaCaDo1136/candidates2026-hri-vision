@@ -3,26 +3,35 @@
 """
 Description:
     Answers questions about a person using retrieval over that person's
-    private documents (ChromaDB, filtered by person_id).
+    private documents (ChromaDB, filtered by person_id) and Ollama.
+    Retrieval matches small chunks; the model answers from the original
+    text those chunks came from (parent context).
 
 ------------------------------
 Services:
     /rag/query - RagQuery
 
 ------------------------------
+Parameters:
+    max_distance (float) - maximum cosine distance for a chunk to count
+    n_results (int)      - chunks retrieved before filtering
+    llm_model (str)      - Ollama model used to write the answer
+
+------------------------------
 Author: Mario Casas Donjuan
-Date: September 28, 2026
+Date: October 8, 2026
 """
 
 import os
 
 import chromadb
-import rclpy
 import ollama
+import rclpy
 
 from rclpy.node import Node
 from sentence_transformers import SentenceTransformer
 from hri_vision_interfaces.srv import RagQuery
+from rag_service.retrieval import build_prompt, select_context
 
 
 class RagServiceNode(Node):
@@ -32,8 +41,9 @@ class RagServiceNode(Node):
         """Loads the embedding model, opens ChromaDB and creates the service."""
         super().__init__('rag_service_node')
 
-        # max distance for the retrieved chunks to be considered relevant
         self.declare_parameter('max_distance', 0.22)
+        self.declare_parameter('n_results', 5)
+        self.declare_parameter('llm_model', 'qwen2.5:1.5b')
 
         self.model = SentenceTransformer('intfloat/multilingual-e5-small')
         client = chromadb.PersistentClient(
@@ -47,48 +57,38 @@ class RagServiceNode(Node):
     def query_callback(self, request, response):
         """Handles a RagQuery request."""
         max_distance = self.get_parameter('max_distance').value
+        n_results = self.get_parameter('n_results').value
         person_id = request.person_id.lower()
-        self.get_logger().info(person_id)
 
         query_embedding = self.model.encode(
             'query: ' + request.question, normalize_embeddings=True).tolist()
-
         results = self.col.query(
             query_embeddings=[query_embedding],
-            n_results=3,
+            n_results=n_results,
             where={'person_id': person_id}
         )
+        context_parts, distances = select_context(results, max_distance)
+        self.get_logger().info(
+            f'{person_id}: distancias={[round(d, 3) for d in distances]} '
+            f'contextos usados={len(context_parts)}')
 
-        documents = results['documents'][0]
-        distances = results['distances'][0]
-        self.get_logger().info(f'Distancias: {distances}')
-        relevant_chunks = [
-            doc for doc, dist in zip(documents, distances) if dist <= max_distance
-        ]
-
-        if not relevant_chunks:
+        if not context_parts:
             response.found = False
             response.answer = 'No encontré información sobre eso.'
-        else:
-            context = '\n'.join(relevant_chunks)
-            prompt = (
-                f'Contexto sobre esta persona:\n{context}\n\n'
-                f'Pregunta: {request.question}\n\n'
-                'Responde SOLO con información del contexto. '
-                'Si el contexto no contiene la respuesta, di que no lo sabes.'
-            )
-            try:
-                result = ollama.chat(
-                    model='qwen2.5:1.5b',
-                    messages=[{'role': 'user', 'content': prompt}]
-                )
-                response.answer = result['message']['content']
-                response.found = True
-            except Exception as e:
-                self.get_logger().warn(f'Ollama falló: {e}')
-                response.answer = ' '.join(relevant_chunks)
-                response.found = True
+            return response
 
+        try:
+            result = ollama.chat(
+                model=self.get_parameter('llm_model').value,
+                messages=[{'role': 'user',
+                           'content': build_prompt(context_parts,
+                                                   request.question)}]
+            )
+            response.answer = result['message']['content']
+        except Exception as e:
+            self.get_logger().warn(f'Ollama falló: {e}')
+            response.answer = ' '.join(context_parts)
+        response.found = True
         return response
 
 

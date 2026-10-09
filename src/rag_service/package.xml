@@ -9,6 +9,7 @@
 
   <depend>rclpy</depend>
   <depend>hri_vision_interfaces</depend>
+  <exec_depend>hri_common</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

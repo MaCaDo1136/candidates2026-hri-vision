@@ -102,7 +102,7 @@ class IdentityFusionNode(Node):
         ]
 
         if not matching_faces:
-            return None, 0.0, 'negar'  # nadie en cuadro coincide con la voz
+            return None, 0.0, 'negar'
 
         best_face = max(matching_faces, key=lambda f: f['score'])
         confidence = min(best_face['score'], self.last_voice['score'])

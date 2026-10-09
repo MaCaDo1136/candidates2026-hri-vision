@@ -34,4 +34,10 @@ def generate_launch_description():
             name='face_id_node',
             output='screen'
         ),
+        Node(
+            package='vision_pipeline',
+            executable='mouth_movement_node',
+            name='mouth_movement_node',
+            output='screen'
+        ),
     ])
