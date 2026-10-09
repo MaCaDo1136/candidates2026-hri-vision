@@ -21,6 +21,7 @@ Date: September 9, 2026
 
 from typing import override
 
+import os
 import rclpy
 import numpy as np
 import cv2
@@ -46,7 +47,7 @@ class CameraNode(Node):
             # Publisher for the camera images
             Image, '/camera/image_raw', qos_profile_sensor_data)
         self.bridge = CvBridge()
-        self.camera = cv2.VideoCapture(0)  # Initialize the camera
+        self.camera = cv2.VideoCapture(int(os.environ.get("HRI_CAMERA_SOURCE", "0")) if os.environ.get("HRI_CAMERA_SOURCE", "0").isdigit() else os.environ["HRI_CAMERA_SOURCE"])  # Initialize the camera
 
         periodo = 0.1  # Periodo de publicación en segundos
         self.timer = self.create_timer(periodo, self.publish_image)
