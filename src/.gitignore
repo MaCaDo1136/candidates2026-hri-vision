@@ -4,7 +4,6 @@ log/
 __pycache__/
 *.pyc
 .vscode/
-models/
 *.npy
 *.jpg
 *.wav

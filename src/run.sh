@@ -54,7 +54,7 @@ install_deps() {
   echo "${B}[deps]${N} Instalando dependencias (primera vez, tarda varios minutos)..."
   $SUDO apt-get update -qq
   $SUDO apt-get install -y python3-pip python3-dev build-essential portaudio19-dev \
-      curl ca-certificates zstd python3-opencv ros-jazzy-cv-bridge ros-jazzy-vision-msgs \
+      curl ca-certificates zstd nano python3-opencv ros-jazzy-cv-bridge ros-jazzy-vision-msgs \
       || { echo "${R}✘ apt falló${N}"; exit 1; }
 
   python3 -m pip install --break-system-packages --ignore-installed -r "$req" || { echo "${R}✘ pip falló${N}"; exit 1; }
