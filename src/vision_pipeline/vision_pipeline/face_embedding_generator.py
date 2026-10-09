@@ -18,6 +18,7 @@ import argparse
 import sys
 import time
 
+import os
 import cv2
 import numpy as np
 from insightface.app import FaceAnalysis
@@ -50,7 +51,7 @@ def embed_frame(app, frame):
 
 def samples_from_camera(app, camera_index=0):
     """Collects embeddings from the camera over a few seconds."""
-    cap = cv2.VideoCapture(camera_index)
+    cap = cv2.VideoCapture((int(os.environ["HRI_CAMERA_SOURCE"]) if os.environ["HRI_CAMERA_SOURCE"].isdigit() else os.environ["HRI_CAMERA_SOURCE"]) if os.environ.get("HRI_CAMERA_SOURCE") else camera_index)
     if not cap.isOpened():
         sys.exit('No pude abrir la cámara. Si el launch de visión está '
                  'corriendo (camera_node la usa), ciérralo, o usa '
