@@ -28,6 +28,7 @@ setup(
     entry_points={
         'console_scripts': [
             'identity_fusion_node = identity_fusion.identity_fusion_node:main',
+            'ui_node = identity_fusion.ui_node:main',
         ],
     },
 )

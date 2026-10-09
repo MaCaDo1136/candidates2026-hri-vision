@@ -35,4 +35,6 @@ def generate_launch_description():
             name='identity_fusion_node',
             output='screen'
         ),
+        Node(package='identity_fusion', executable='ui_node',
+                     name='ui_node', output='screen'),
     ])

@@ -22,6 +22,7 @@ Date: October 1, 2026
 """
 
 import rclpy
+import json
 
 from rclpy.node import Node
 from std_msgs.msg import String
@@ -47,6 +48,9 @@ class IdentityFusionNode(Node):
 
         self.response_pub = self.create_publisher(
             String, '/system/response', 10)
+
+        self.state_pub = self.create_publisher(
+            String, '/fusion/state', 10)
 
         self.create_subscription(
             Detection2DArray, '/faces/identified', self.faces_callback, 10)
@@ -123,6 +127,18 @@ class IdentityFusionNode(Node):
         person_id, confidence, state = self.evaluate_identity()
         self.get_logger().info(
             f'Fusion state: {state} (person={person_id}, confidence={confidence:.2f})')
+
+        voice = self.last_voice
+        self.state_pub.publish(String(data=json.dumps({
+            'question': msg.text,
+            'person': person_id,
+            'confidence': round(float(confidence), 3),
+            'state': state,
+            'voice': {'speaker': voice['speaker'],
+                      'score': round(float(voice['score']), 3)} if voice else None,
+            'faces': [{'person': f['person'], 'score': round(float(f['score']), 3)}
+                      for f in self.last_faces],
+        })))
 
         if state == 'negar':
             self.publish_response(

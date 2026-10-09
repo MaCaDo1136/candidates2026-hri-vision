@@ -3,9 +3,9 @@
 """
 Description:
     This node identifies tracked faces by comparing their ArcFace
-    embedding (InsightFace) against a pre-enrolled reference embedding,
-    using cosine similarity, and publishes the identity guess for each
-    tracked detection.
+    embedding (InsightFace) against every enrolled person in the
+    people registry (hri_common), using cosine similarity, and publishes
+    the identity guess for each tracked detection.
 
 ------------------------------
 Publishing topics:
@@ -17,29 +17,29 @@ Subscription Topics:
     /faces/tracked - Detection2DArray
 
 ------------------------------
+Parameters:
+    threshold (float) - minimum cosine similarity to accept an identity
+    process_every (int) - process one of every N tracked messages
+
+------------------------------
 Author: Mario Casas Donjuan
 Date: September 16, 2026
 """
 
 import rclpy
-import numpy as np
-import os
 
 from insightface.app import FaceAnalysis
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from vision_msgs.msg import Detection2DArray
 from rclpy.qos import qos_profile_sensor_data
 from cv_bridge import CvBridge
 from vision_msgs.msg import Detection2DArray, ObjectHypothesisWithPose
-from ament_index_python.packages import get_package_share_directory
 
-embedding_path = os.path.join(get_package_share_directory(
-    'vision_pipeline'), 'mario_embedding.npy')  # Path to the known embedding
+from hri_common.people import FACE_FILE, best_match, load_embeddings
 
 
 class FaceIdNode(Node):
-    """Identifies tracked faces against a known embedding using
+    """Identifies tracked faces against all enrolled people using
     InsightFace (ArcFace) and cosine similarity.
     """
 
@@ -48,8 +48,18 @@ class FaceIdNode(Node):
         super().__init__('face_id_node')
         self.get_logger().info('Face ID node has been started.')
 
-        self.known_embedding = np.load(
-            embedding_path)  # Load the known embedding
+        self.declare_parameter('threshold', 0.5)
+        self.declare_parameter('process_every', 10)
+        self.threshold = self.get_parameter('threshold').value
+        self.process_every = self.get_parameter('process_every').value
+
+        self.references = load_embeddings(FACE_FILE)
+        if not self.references:
+            self.get_logger().warn(
+                'No enrolled faces found: everyone will be Unknown.')
+        else:
+            self.get_logger().info(
+                f'Enrolled faces: {sorted(self.references)}')
         self.frame_counter = 0
 
         self.app = FaceAnalysis(name='buffalo_l')
@@ -67,14 +77,14 @@ class FaceIdNode(Node):
             Detection2DArray, '/faces/tracked', self.tracked_callback, 10)
 
     def camera_callback(self, msg):
-        """Saves the latest camera frame for visualization."""
+        """Saves the latest camera frame."""
         self.latest_frame = self.bridge.imgmsg_to_cv2(
             msg, desired_encoding='bgr8')
 
     def tracked_callback(self, msg):
-        """Identifies tracked faces by comparing their embeddings against the known embedding."""
+        """Identifies tracked faces against the enrolled people."""
         self.frame_counter += 1
-        if self.frame_counter % 10 != 0:  # Process every 10th frame to reduce computation
+        if self.frame_counter % self.process_every != 0:
             return
 
         if self.latest_frame is None:
@@ -105,13 +115,12 @@ class FaceIdNode(Node):
             faces = self.app.get(frame[y1:y2, x1:x2])
 
             if faces:
-                detected_embedding = faces[0].embedding
-                similarity = np.dot(self.known_embedding, detected_embedding) / (
-                    np.linalg.norm(self.known_embedding) * np.linalg.norm(detected_embedding))
+                identity, score = best_match(
+                    faces[0].embedding, self.references, self.threshold)
 
                 hypothesis = ObjectHypothesisWithPose()
-                hypothesis.hypothesis.class_id = 'Mario' if similarity > 0.5 else 'Unknown'
-                hypothesis.hypothesis.score = float(similarity)
+                hypothesis.hypothesis.class_id = identity
+                hypothesis.hypothesis.score = float(score)
                 detection.results.append(hypothesis)
 
             identified_msg.detections.append(detection)

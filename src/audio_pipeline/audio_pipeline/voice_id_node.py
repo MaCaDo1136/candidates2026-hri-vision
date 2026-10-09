@@ -2,10 +2,10 @@
 
 """
 Description:
-    Identifies the speaker of each audio segment by comparing its
-    voice embedding (Resemblyzer) against a pre-enrolled reference
-    embedding, using cosine similarity, and publishes the identity
-    guess independently from transcription.
+    Identifies who is speaking in each audio segment by comparing its voice
+    embedding (Resemblyzer) against every enrolled person's voice
+    (~/hri_people/<name>/voice.npy) with cosine similarity, and publishes
+    the best match independently from transcription.
 
 ------------------------------
 Publishing topics:
@@ -16,36 +16,36 @@ Subscription Topics:
     /audio/segments - AudioSegment
 
 ------------------------------
+Parameters:
+    threshold (float) - minimum similarity to accept a match
+
+------------------------------
 Author: Mario Casas Donjuan
-Date: September 25, 2026
+Date: October 9, 2026
 """
 
-import os
-
-import rclpy
 import numpy as np
+import rclpy
 
 from rclpy.node import Node
 from resemblyzer import VoiceEncoder, preprocess_wav
 from hri_vision_interfaces.msg import AudioSegment, VoiceIdentity
-from ament_index_python.packages import get_package_share_directory
-
-embedding_path = os.path.join(get_package_share_directory(
-    'audio_pipeline'), 'mario_voice_embedding.npy')
+from hri_common.people import VOICE_FILE, best_match, load_embeddings
 
 
 class VoiceIdNode(Node):
-    """Identifies the speaker of each audio segment against a known
-    voice embedding using Resemblyzer and cosine similarity.
-    """
+    """Identifies the speaker of each audio segment among enrolled people."""
 
     def __init__(self):
         """Initializes the node, the subscriber, and the publisher."""
         super().__init__('voice_id_node')
-        self.get_logger().info('Voice ID node has been started.')
+
+        self.declare_parameter('threshold', 0.60)
 
         self.encoder = VoiceEncoder()
-        self.reference_embed = np.load(embedding_path)
+        self.references = load_embeddings(VOICE_FILE)
+        self.get_logger().info(
+            f'Voice ID node started. Enrolled voices: {list(self.references)}')
 
         self.publisher = self.create_publisher(
             VoiceIdentity, '/audio/identity', 10)
@@ -53,25 +53,19 @@ class VoiceIdNode(Node):
             AudioSegment, '/audio/segments', self.audio_segment_callback, 10)
 
     def audio_segment_callback(self, msg):
-        """Callback function for the audio segment subscription.
-
-        Args:
-            msg (AudioSegment): The received audio segment message.
-        """
-        msg_samples = np.array(msg.samples, dtype=np.float32)
-        wav = preprocess_wav(msg_samples)
+        """Identifies the speaker of the received audio segment."""
+        wav = preprocess_wav(np.array(msg.samples, dtype=np.float32))
         embed = self.encoder.embed_utterance(wav)
 
-        similarity = np.dot(embed, self.reference_embed) / \
-            (np.linalg.norm(embed) * np.linalg.norm(self.reference_embed))
+        speaker, score = best_match(
+            embed, self.references, self.get_parameter('threshold').value)
 
         identity_msg = VoiceIdentity()
         identity_msg.header = msg.header
-        identity_msg.speaker = 'Mario' if similarity > 0.60 else 'Unknown'
-        identity_msg.score = float(similarity)
+        identity_msg.speaker = speaker
+        identity_msg.score = score
         self.publisher.publish(identity_msg)
-        self.get_logger().info(
-            f'Speaker: {identity_msg.speaker} (score: {similarity:.4f})')
+        self.get_logger().info(f'Speaker: {speaker} (score: {score:.4f})')
 
 
 def main(args=None):
