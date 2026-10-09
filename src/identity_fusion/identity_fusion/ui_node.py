@@ -18,7 +18,7 @@ Subscription Topics:
 
 ------------------------------
 Parameters:
-    host (str) - interface to bind (default 127.0.0.1)
+    host (str) - interface to bind (default 0.0.0.0)
     port (int) - HTTP port (default 8080)
     max_fps (float) - maximum fps of the video stream
     threshold_respond / threshold_ask (float) - shown as markers on the bar
@@ -104,7 +104,7 @@ class UiNode(Node):
 
     def __init__(self):
         super().__init__('ui_node')
-        self.declare_parameter('host', '127.0.0.1')
+        self.declare_parameter('host', '0.0.0.0')
         self.declare_parameter('port', 8080)
         self.declare_parameter('max_fps', 15.0)
         self.declare_parameter('jpeg_quality', 75)
