@@ -57,7 +57,7 @@ install_deps() {
       curl ca-certificates zstd python3-opencv ros-jazzy-cv-bridge ros-jazzy-vision-msgs \
       || { echo "${R}✘ apt falló${N}"; exit 1; }
 
-  python3 -m pip install --break-system-packages -r "$req" || { echo "${R}✘ pip falló${N}"; exit 1; }
+  python3 -m pip install --break-system-packages --ignore-installed -r "$req" || { echo "${R}✘ pip falló${N}"; exit 1; }
   python3 -m pip install --break-system-packages --no-deps mediapipe==0.10.18
   python3 -m pip install --break-system-packages absl-py attrs flatbuffers matplotlib
 
