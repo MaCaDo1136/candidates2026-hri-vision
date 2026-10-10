@@ -38,4 +38,10 @@ Los modelos de Whisper y Resemblyzer se descargan solos la primera vez.
 
 ## Registro de voces
 
-`voice_embedding_generator.py` graba unos 8 segundos y exige al menos 2 segundos de voz real; guarda el
+`voice_embedding_generator.py` graba unos 8 segundos y exige al menos 2 segundos de voz real; guarda el embedding de la persona. Se usa desde el menú de `people.sh`, no hay que correrlo a mano. Los embeddings viven en `~/hri_people`, no en el repositorio.
+
+## Lanzar solo audio
+
+```bash
+ros2 launch audio_pipeline audio_pipeline.launch.py
+```
